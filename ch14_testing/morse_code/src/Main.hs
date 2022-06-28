@@ -55,10 +55,10 @@ main = do
     _ -> argError 
 
     where argError = do
-      putStrLn "Please specify the first argument \
-                \as being 'from' or 'to' morse,\
-                \ such as: morse to"
-      exitFailure
+            putStrLn "Please specify the first argument \
+                      \as being 'from' or 'to' morse,\
+                      \ such as: morse to" 
+            exitFailure
 
 
         
