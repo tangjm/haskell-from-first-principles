@@ -3,6 +3,7 @@ module WordNumber where
 import Data.List (intersperse)
 
 digitToWord :: Int -> String
+digitToWord 0 = "zero"
 digitToWord 1 = "one"
 digitToWord 2 = "two"
 digitToWord 3 = "three"
