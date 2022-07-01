@@ -37,10 +37,11 @@ main :: IO ()
 main = do
   quickCheck $ ignoreDivisionByZero testQuotAndRem
   quickCheck $ ignoreDivisionByZero testDivAndMod
-  
+
   -- The following computation won't ever end because we have unbounded quantification.
   -- quickCheck $ forAll intGen 
   --               (\x -> forAll intGen 
   --                 (\y -> testQuotAndRem x y))
 
 -- Fix 'division by zero error
+
