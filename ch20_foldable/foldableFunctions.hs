@@ -2,6 +2,7 @@ module FoldableFunctions where
 
 import Test.QuickCheck
 import Data.Monoid
+import Data.Semigroup
 
 -- Functions implemented in terms of 'foldMap' and 'foldr'
 
@@ -48,11 +49,18 @@ elem'' :: (Foldable t, Eq a) => a -> t a -> Bool
 elem'' x xs = getAny $ foldr (\y z -> Any (y == x) <> z) mempty xs
 
 minimum' :: (Foldable t, Ord a) => t a -> Maybe a
-minimum' = undefined
+minimum' xs = undefined
 -- minimum' xs = Just $ foldr (\x y -> case compare x y of 
 --                               LT -> x
 --                               _  -> y)  xs
 
+-- 6.
+null' :: Foldable t => t a -> Bool
+null' xs = undefined
+
+-- 7.
+length' :: Foldable t => t a -> Bool
+length' xs = undefined
 
 -- 8.
 toList' :: Foldable t => t a -> [a]
@@ -66,6 +74,9 @@ fold' = foldMap id
 -- 10. Define foldMap in terms of foldr.
 foldMap' :: (Foldable t, Monoid m) => (a -> m) -> t a -> m
 foldMap' f xs = foldr (\x y -> f x <> y) mempty xs
+
+foldMap'' :: (Foldable t, Monoid m) => (a -> m) -> t a -> m
+foldMap'' f xs = foldr (mappend . f) mempty xs
 
 testMyFoldMap :: (Foldable t, Monoid m, Eq m) => (a -> m) -> t a -> Bool
 testMyFoldMap f xs = foldMap' f xs == foldMap f xs
