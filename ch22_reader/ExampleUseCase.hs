@@ -56,5 +56,8 @@ getDogR = Dog <$> Reader dogName <*> Reader address
 
 -- (DogName -> Address -> Dog) -> Reader Person DogName -> Reader Person Address
 
-getDogR' :: Person -> Dog
-getDogR' = runReader getDogR
+getDogR' :: Reader Person Dog
+getDogR' = liftA2 Dog (Reader dogName) (Reader address)
+
+getDogFromR :: Person -> Dog
+getDogFromR = runReader getDogR
