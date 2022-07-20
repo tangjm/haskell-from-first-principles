@@ -1,7 +1,7 @@
 module ExampleUseCase where
 
 import Control.Applicative
-import ReaderApplicative
+import ReaderMonad
 
 newtype HumanName =
   HumanName String
@@ -61,3 +61,11 @@ getDogR' = liftA2 Dog (Reader dogName) (Reader address)
 
 getDogFromR :: Person -> Dog
 getDogFromR = runReader getDogR
+
+-- Now using the Reader newtype with a Monad instance.
+
+-- (>>=) :: Reader r a -> (a -> Reader r b) -> Reader r b 
+-- (Person -> DogName) -> (DogName -> Person -> Dog) -> Person -> Dog 
+getDogRM :: Reader Person Dog
+-- getDogRM = Reader dogName >>= \dogName p -> Dog dogName (address p)
+getDogRM = Reader dogName >>= \dogName -> Dog dogName <$> Reader address

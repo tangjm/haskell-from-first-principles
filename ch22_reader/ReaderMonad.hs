@@ -22,6 +22,8 @@ instance Monad (Reader r) where
   -- >>= :: (r -> a) -> (a -> (r -> b)) -> r -> b 
   (>>=) :: Reader r a -> (a -> Reader r b) -> Reader r b 
   Reader f >>= g = Reader $ \x -> runReader (g (f x)) x 
+  
+  -- Is there a more concise way of spelling this out?
 
   -- The tricky part is the following reduction.
   -- Reader r (Reader r b) 
