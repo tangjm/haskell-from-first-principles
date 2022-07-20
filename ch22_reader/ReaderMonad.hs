@@ -23,7 +23,16 @@ instance Monad (Reader r) where
   (>>=) :: Reader r a -> (a -> Reader r b) -> Reader r b 
   Reader f >>= g = Reader $ \x -> runReader (g (f x)) x 
   
-  -- Is there a more concise way of spelling this out?
+  {- 
+  Is there a more concise way of spelling this out?
+
+  If it weren't for the Reader wrapper, we could define (>>=) in terms of (<*>).
+
+  (<*>) :: (r -> a -> b) -> (r -> a) -> r -> b
+  
+  (>>=) :: (r -> a) -> (a -> r -> b) -> r -> b 
+  f >>= g = flip g <*> f 
+  -}
 
   -- The tricky part is the following reduction.
   -- Reader r (Reader r b) 
