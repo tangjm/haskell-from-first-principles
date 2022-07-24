@@ -66,4 +66,38 @@ nDie n = replicateM n rollDie
 
 -- By contrast, this repeats the 'rollDie' computation.
 
- 
+rollsToGetTwenty :: StdGen -> Int 
+rollsToGetTwenty g = go 0 0 g 
+  where go :: Int -> Int -> StdGen -> Int 
+        go sum count gen 
+          | sum >= 20 = count 
+          | otherwise =
+            let (die, nextGen) = randomR (1, 6) gen 
+            in go (sum + die) (count + 1) nextGen 
+
+-- returns the number of dice rolls needed to roll a cumulative total of at least 20
+
+-- automated = (rollsToGetTwenty . mkStdGen) <$> randomIO 
+
+rollsToGetN :: Int -> StdGen -> Int 
+rollsToGetN n g = go 0 0 g 
+  where go :: Int -> Int -> StdGen -> Int  
+        go sum count gen 
+          | sum >= n = count 
+          | otherwise = 
+            let (die, nextGen) = randomR (1, 6) gen 
+            in go (sum + die) (count + 1) nextGen 
+
+-- returns the number of dice rolls needed to roll a cumulative total of at least N 
+
+rollsCountLogged :: Int -> StdGen -> (Int, [Die]) 
+rollsCountLogged n g = go 0 0 [] g 
+  where go :: Int -> Int -> [Die] -> StdGen -> (Int, [Die])
+        go sum count history gen 
+          | sum >= n = (count, history) 
+          | otherwise = 
+            let (die, nextGen) = randomR (1, 6) gen 
+            in go (sum + die) (count + 1) (history ++ [intToDie die]) nextGen 
+
+
+-- returns the number of die rolls needed to rolls a cumulative total of at least N in addition to a history of those dice rolls. 
