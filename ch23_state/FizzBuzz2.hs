@@ -32,10 +32,28 @@ xs :: [String]
 
 main :: IO ()
 main = 
-  mapM_ putStrLn $ reverse $ fizzbuzzList [1..100]
+  -- mapM_ putStrLn $ reverse $ fizzbuzzList [1..100]
+  mapM_ putStrLn $ fizzbuzzFromTo 1 100 
 
 {-
 mapM_ produces a foldable list of type [IO ()]
 Then we fold that list into a single 'IO ()' which is the
 return type of our 'main' function
 -}
+
+
+-- enumerate our sequence backwards to avoid having to run a costly reverse operation of our resulting singly linked-list.
+-- Here n < m where n denotes the lower bound and m denotes the upper bound
+
+-- The following not work because Haskell implicitly assumes that [m..n] will be in ascending order. It's not that there is no guarantee that m > n for all m and n. 
+
+fizzbuzzFromTo :: Integer -> Integer -> [String]
+fizzbuzzFromTo n m =  
+  execState (mapM_ addResult [m..n]) []
+
+-- We can specify [m, m-1 .. n] to explicity tell the compiler that this will be a descending list.
+
+fizzbuzzFromTo' :: Integer -> Integer -> [String]
+fizzbuzzFromTo' n m =
+  execState (mapM_ addResult [m, m - 1..n]) [] 
+  
