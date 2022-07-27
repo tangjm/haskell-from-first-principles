@@ -33,7 +33,7 @@ xs :: [String]
 main :: IO ()
 main = 
   -- mapM_ putStrLn $ reverse $ fizzbuzzList [1..100]
-  mapM_ putStrLn $ fizzbuzzFromTo 1 100 
+  mapM_ putStrLn $ fizzbuzzFromTo' 1 100 
 
 {-
 mapM_ produces a foldable list of type [IO ()]
