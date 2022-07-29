@@ -9,15 +9,54 @@ instance Functor (State s) where
   fmap f (State g) = State $ \x -> (f (fst (g x)), x) 
   -- fmap f (State g) = State $ f . fst . g
   
--- instance Applicative (State s) where
---   pure x = State $ \y -> (x, y)
---   (<*>) :: State s (a -> b) -> State s a -> State s b 
---   State f <*> State g = 
---    State $ \x -> f (fst (g x)) 
+instance Applicative (State s) where
+  pure x = State $ \y -> (x, y)
+  
+  (<*>) :: State s (a -> b) -> State s a -> State s b 
+  State f <*> State g = 
+   State $ \x -> ((fst (f x)) (fst (g x)), x)
 
--- instance Monad (State s) where
---   State f >>= g = 
---    State $ g . f 
+{-
+   s -> (a -> b, s)
+   s -> (a, s)
+   s -> (b, s)
+-}
+
+instance Monad (State s) where
+  (>>=) :: State s a -> (a -> State s b) -> State s b
+  State f >>= g = 
+    -- State $ \x -> ((runState (fst ((runState (g <$> (State f))) x))) x) 
+    State $ \x -> (runState (fst ((runState (g <$> (State f))) x))) (snd ((runState (g <$> (State f))) x)) -
+
+{-
+State $ s -> (a, s)
+a -> State $ s -> (s, b) 
+State $ s -> (b, s)
+
+1. State s a
+2. State s (State s b)
+3. State s b
+
+How we go from 1 and 2 to 3?
+
+g <$> (State f) :: State s (State s b)
+runState $ g <$> (State f) :: s -> (State s b, s)
+                           :: s -> (s -> (b, s), s)
+
+\x -> (runState (g <$> (State f))) x  :: s -> (State s b, s) 
+\x -> ((runState (fst ((runState (g <$> (State f))) x))) x) 
+:: State s b
+
+\x -> (runState (fst ((runState (g <$> (State f))) x))) (snd ((runState (g <$> (State f))) x)) 
+
+Applying this final function involves the following reduction:
+s -> (State s b, s)
+fst (State s b, s)
+runState $ State s b 
+s -> (b, s)
+-}
+
+
 
 get :: State s s
 get = State $ \x -> (x, x)
