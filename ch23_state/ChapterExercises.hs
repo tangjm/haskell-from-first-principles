@@ -6,10 +6,11 @@ newtype State s a =
   State { runState :: s -> (a, s) }
 
 instance Functor (State s) where
-  fmap f (State g) = State $ \x -> (f (fst (g x)), x) 
+  fmap f (State g) = State $ \x -> (f (fst $ g x), (snd $ g x)) 
   -- fmap f (State g) = State $ f . fst . g
   
 instance Applicative (State s) where
+  pure :: a -> State s a
   pure x = State $ \y -> (x, y)
   
   (<*>) :: State s (a -> b) -> State s a -> State s b 
@@ -23,12 +24,37 @@ instance Applicative (State s) where
 -}
 
 instance Monad (State s) where
+  return = pure 
+
   (>>=) :: State s a -> (a -> State s b) -> State s b
   State f >>= g = 
-    -- State $ \x -> ((runState (fst ((runState (g <$> (State f))) x))) x) 
-    State $ \x -> (runState (fst ((runState (g <$> (State f))) x))) (snd ((runState (g <$> (State f))) x)) -
+    State $ \x -> (runState (fst $ fn x)) (snd $ fn x) 
+              where fn = runState (g <$> (State f)) 
+{- 
+Solved problem where 'runState (modify (+1) >> modify (+1)) 0' returns ((), 1) instead of ((), 2) 
+
+The problem turned out to be with the Functor instance.
+Because we had 
+    fmap f (State g) = State $ \x -> (f (fst $ g x), x) 
+instead of
+    fmap f (State g) = State $ \x -> (f (fst $ g x), (snd $ g x)) 
+
+The following part of our implementation of (>>=) would produce the unwanted result
+
+runState $ g <$> (State f) :: s -> (State s b, s)
+                           :: s -> (s -> (b, s), s)
+
+What happens is that the argument 's' passed to s -> (b, s) is the same as the 's' passed to s -> (s -> (b, s), s). This isn't what we want as we want the second element of (s -> (b, s), s) to be passed to s -> (b, s).
+
+Given 'modify (+1)' the types would be s -> (s -> (b, s + 1), s + 1)
+And so 
+runState $ (modify (+1) >> modify (+1)) 0  will produce ((), 1) instead of ((), 2) 
+
+-}
 
 {-
+Notes on (>>=) implementation
+
 State $ s -> (a, s)
 a -> State $ s -> (s, b) 
 State $ s -> (b, s)
@@ -43,17 +69,21 @@ g <$> (State f) :: State s (State s b)
 runState $ g <$> (State f) :: s -> (State s b, s)
                            :: s -> (s -> (b, s), s)
 
+Initial implementation
 \x -> (runState (g <$> (State f))) x  :: s -> (State s b, s) 
 \x -> ((runState (fst ((runState (g <$> (State f))) x))) x) 
 :: State s b
+\x -> (runState (fst $ fn x)) x 
+          where fn = runState (g <$> (State f))
+
+Correct implementation.
+We apply the first element of the tuple returned from the first function application to the second element of the tuple returned from the first function application.
 
 \x -> (runState (fst ((runState (g <$> (State f))) x))) (snd ((runState (g <$> (State f))) x)) 
 
-Applying this final function involves the following reduction:
-s -> (State s b, s)
-fst (State s b, s)
-runState $ State s b 
-s -> (b, s)
+\x -> (runState (fst $ fn x)) (snd $ fn x) 
+  where fn = runState (g <$> (State f)) 
+
 -}
 
 
@@ -87,7 +117,46 @@ modify' = \x -> State $ \y -> ((), x y)
 
 {-
 Examples
-runSTate (modify (+1)) 0
+runState (modify (+1)) 0
 We seem to need a Monad instance for this one to work:
 runState (modify (+1) >> modify (+1)) 0 
+
+Breakdown of the above function
+State $ \x -> ((), f x) >> State $ \x -> ((), f x)
+\x -> ((), f x)
+  \y -> ((), f y)
+    where y = f x
+
+Understanding >>= when typed to (modify (+1))
+
+\x -> (runState (fst ((runState (g <$> (State f))) x))) (snd ((runState (g <$> (State f))) x)) 
+
+(>>=) :: State s () -> (() -> State s ()) -> State s ()
+State f >>= g 
+
+g <$> (State f) = 
+  (() -> State s ()) <$> State $ \x -> ((), x + 1)
+  State $ \x -> (State s (), x + 1)
+
+runState $ g <$> (State f) = 
+  \x -> (State s (), x + 1)
+
+runState $ (g <$> (State f)) x = 
+  (State s (), x + 1)
+
+fst (State s (), x + 1) = 
+  State s ()
+
+snd (State s (), x + 1) = 
+  x + 1
+
+runState $ State s () = 
+  \x -> ((), x + 1)
+
+runState $ State s () $ x + 1 =
+  \x -> ((), x + 1) 
+
+((), (x + 1) + 1)
+
+
 -}
