@@ -37,6 +37,25 @@ oneTwoEOF = oneTwo >> eof
 stringParser :: String -> Parser String
 stringParser xs = string xs 
 
+{- 
+Write stringParser using the 'char' parser 
+
+At each step, 
+  continue parsing if successful
+  return Failure if unsucessful
+At the end, return the successfully parsed result if no failure has yet occured.
+-}
+charParser :: Parser Char 
+           -> Parser Char
+           -> Parser Char 
+           -> String 
+           -> Result String 
+charParser p1 p2 p3 s = 
+  parseString p1 mempty s 
+   >>= \x -> parseString p2 mempty (tail s) 
+     >>= \y -> parseString p3 mempty (tail . tail $ s) 
+      >>= \z -> Success [x, y, z]
+
 testParse :: Parser Char -> IO ()
 testParse p = 
   print $ parseString p mempty "123"
@@ -85,3 +104,6 @@ main = do
   testParseString $ stringParser "123"
   pNL "oneTwo then stop:"
   testParseString $ stringParser "12" >> stop
+
+  pNL "charParser:"
+  print $ charParser (char '1') (char '2') (char '3') "123"
